@@ -13,11 +13,13 @@ from typing import Any, Dict, List, Tuple, Union
 from aiosqlite.cursor import Cursor
 
 
-def build_query(query: str, _dict: Dict[str, Any]) -> Tuple[str, List[Any]]:
+def build_query(
+    query: str, _dict: Dict[str, Any], build: str = " = ?"
+) -> Tuple[str, List[Any]]:
     values: List[Any] = []
 
     for key, value in _dict.items():
-        query += f"{key} = ? "
+        query += key + build
         values.append(value)
 
     return query, values

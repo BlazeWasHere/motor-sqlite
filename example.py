@@ -3,7 +3,7 @@
 
 import asyncio
 
-from src.api import MotorSqlite
+from src import MotorSqlite
 
 
 async def test():
@@ -29,14 +29,23 @@ async def test():
     async for x in posts.find({'key': 'exists'}):
         print(x)
 
-    # TODO: update(...) func
-    await posts.update(
-        {'foo': 'bar'},
-        {'$set': {
-            'val': 'key',
-            'key': 'val',
-        },
-    })
+    # 1
+    print(await posts.update(
+        {'key': 'exists'},
+        {'$set': {'key': 'value'}},
+    ))
+
+    # True
+    print(await posts.update_one(
+        {'key': 'value'},
+        {'$set': {'key': 'changed'}},
+    ))
+
+    # 1
+    print(await posts.update(
+        {'key': 'changed'},
+        {'$set': {'key': 'exists'}},
+    ))
 
 
 database = MotorSqlite()

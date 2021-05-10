@@ -8,7 +8,7 @@
           https://www.boost.org/LICENSE_1_0.txt)
 """
 
-from typing import Any, Dict, Generator, Iterable, Optional, Union
+from typing import Any, Dict, Generator, Iterable, Optional, Union, Tuple, List
 
 from aiosqlite.core import Connection
 from aiosqlite.cursor import Cursor
@@ -34,7 +34,10 @@ class MotorSqliteTable(object):
             self.db = await self.conn
 
         self.db.row_factory = dict_factory  # type: ignore
-        return await self.db.execute(query, values)
+        cursor = await self.db.execute(query, values)
+        await self.db.commit()
+
+        return cursor
 
     async def find(
         self, _dict: Dict[str, Any]
@@ -50,8 +53,38 @@ class MotorSqliteTable(object):
     async def find_one(
         self, _dict: Dict[str, Any]
     ) -> Optional[Dict[str, Union[str, int]]]:
-    
+
         try:
             return await self.find(_dict).__anext__()
         except StopAsyncIteration:
             return None
+
+    def _update(
+        self, _dict: Dict[str, Any], opts: Dict[str, Dict[str, Any]]
+    ) -> Tuple[str, List[Any]]:
+        query, values = build_query(self.insert, opts['$set'], " = ?,")
+        # such an ugly way to remove trailing `,` and add `WHERE`
+        query = query[:-1] + " WHERE "
+
+        query, x = build_query(query, _dict)
+        values += x
+
+        return query, values
+
+    async def update(
+        self, _dict: Dict[str, Any], opts: Dict[str, Dict[str, Any]]
+    ) -> int:
+        query, values = self._update(_dict, opts)
+        cursor = await self._execute(query, values)
+
+        return cursor.rowcount
+
+    async def update_one(
+        self, _dict: Dict[str, Any], opts: Dict[str, Dict[str, Any]]
+    ) -> bool:
+        query, values = self._update(_dict, opts)
+        query += " LIMIT 1"
+        
+        cursor = await self._execute(query, values)
+
+        return cursor.rowcount == 1
