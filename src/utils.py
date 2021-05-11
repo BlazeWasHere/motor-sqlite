@@ -14,12 +14,15 @@ from aiosqlite.cursor import Cursor
 
 
 def build_query(
-    query: str, _dict: Dict[str, Any], build: str = " = ?"
+    query: str, _dict: Dict[str, Any], build: str = " = ?", _key: bool = True,
 ) -> Tuple[str, List[Any]]:
     values: List[Any] = []
 
     for key, value in _dict.items():
-        query += key + build
+        if _key:
+            query += key
+
+        query += build
         values.append(value)
 
     return query, values

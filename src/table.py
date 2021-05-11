@@ -23,8 +23,9 @@ class MotorSqliteTable(object):
         self.table = table
 
         # SQL queries
-        self.select = f"SELECT * FROM {table} WHERE "
-        self.insert = f"UPDATE {table} SET "
+        self.select = f'SELECT * FROM {table} WHERE '
+        self.update_sql = f'UPDATE {table} SET '
+        self.insert_sql = f'INSERT INTO {table} '
 
     async def _execute(
         self, query: str, values: Iterable[Any] = None
@@ -62,9 +63,9 @@ class MotorSqliteTable(object):
     def _update(
         self, _dict: Dict[str, Any], opts: Dict[str, Dict[str, Any]]
     ) -> Tuple[str, List[Any]]:
-        query, values = build_query(self.insert, opts['$set'], " = ?,")
+        query, values = build_query(self.update_sql, opts['$set'], ' = ?,')
         # such an ugly way to remove trailing `,` and add `WHERE`
-        query = query[:-1] + " WHERE "
+        query = query[:-1] + ' WHERE '
 
         query, x = build_query(query, _dict)
         values += x
@@ -72,19 +73,32 @@ class MotorSqliteTable(object):
         return query, values
 
     async def update(
-        self, _dict: Dict[str, Any], opts: Dict[str, Dict[str, Any]]
+        self, _dict: Dict[str, Any], opts: Dict[str, Dict[str, Any]],
+        one: bool = False
     ) -> int:
         query, values = self._update(_dict, opts)
         cursor = await self._execute(query, values)
+
+        if one:
+            query += ' LIMIT 1'
 
         return cursor.rowcount
 
     async def update_one(
         self, _dict: Dict[str, Any], opts: Dict[str, Dict[str, Any]]
     ) -> bool:
-        query, values = self._update(_dict, opts)
-        query += " LIMIT 1"
-        
+        return await self.update(_dict, opts, True) == 1
+
+    async def insert(self, data: Dict[str, Any]) -> int:
+        query = f"{self.insert_sql}({','.join(data.keys())}) VALUES ("
+        query, values = build_query(query, data, '?,', False)
+
+        # such an ugly way to remove trailing `,` and add `)`
+        query = query[:-1] + ')'
+
         cursor = await self._execute(query, values)
 
-        return cursor.rowcount == 1
+        return cursor.rowcount
+
+    async def insert_one(self, data: Dict[str, Any]) -> bool:
+        return await self.insert(data) == 1

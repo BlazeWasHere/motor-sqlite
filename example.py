@@ -17,36 +17,43 @@ async def test():
     posts = db.posts
 
     # None
-    print(await posts.find_one({'key': 'foo'}))
+    assert(await posts.find_one({'key': 'foo'}) is None)
 
     # {'key': 'exists'}
-    print(await posts.find_one({'key': 'exists'}))
+    assert(await posts.find_one({'key': 'exists'}) == {'key': 'exists'})
 
     # <async_generator object MotorSqliteTable.find at 0xxxxxxxxxxxxx>
     print(posts.find({'key': 'exists'}))
 
     # {'key': 'exists'}
     async for x in posts.find({'key': 'exists'}):
-        print(x)
+        assert(x == {'key': 'exists'})
 
     # 1
-    print(await posts.update(
+    assert(await posts.update(
         {'key': 'exists'},
         {'$set': {'key': 'value'}},
-    ))
+    ) == 1)
 
     # True
-    print(await posts.update_one(
+    assert(await posts.update_one(
         {'key': 'value'},
         {'$set': {'key': 'changed'}},
     ))
 
     # 1
-    print(await posts.update(
+    assert(await posts.update(
         {'key': 'changed'},
         {'$set': {'key': 'exists'}},
-    ))
+    ) == 1)
 
+    # 1
+    assert(await posts.insert_one({'key': 'inserted'}) == 1)
+
+    # 1
+    assert(await posts.insert({'key': 'inserted1'}) == 1)
+
+    print('tests passed.')
 
 database = MotorSqlite()
 
