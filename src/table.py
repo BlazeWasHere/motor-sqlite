@@ -23,9 +23,10 @@ class MotorSqliteTable(object):
         self.table = table
 
         # SQL queries
-        self.select = f'SELECT * FROM {table} WHERE '
+        self.select_sql = f'SELECT * FROM {table} WHERE '
         self.update_sql = f'UPDATE {table} SET '
         self.insert_sql = f'INSERT INTO {table} '
+        self.delete_sql = f'DELETE FROM {table} WHERE '
 
     async def _execute(
         self, query: str, values: Iterable[Any] = None
@@ -44,7 +45,7 @@ class MotorSqliteTable(object):
         self, _dict: Dict[str, Any]
     ) -> Generator[Dict[str, Union[str, int]], None, None]:
 
-        query, values = build_query(self.select, _dict)
+        query, values = build_query(self.select_sql, _dict)
         cursor = await self._execute(query, values)
 
         # async generator to keep it similar to motor api
@@ -102,3 +103,8 @@ class MotorSqliteTable(object):
 
     async def insert_one(self, data: Dict[str, Any]) -> bool:
         return await self.insert(data) == 1
+
+    async def execute_raw(
+        self, sql: str, params: Iterable[Any] = None
+    ) -> Cursor:
+        return await self._execute(sql, params)

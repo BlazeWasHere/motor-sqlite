@@ -52,7 +52,7 @@ async def test():
 
     # 1
     assert(await posts.insert({'key': 'inserted1'}) == 1)
-
+    
     print('tests passed.')
 
 database = MotorSqlite()
