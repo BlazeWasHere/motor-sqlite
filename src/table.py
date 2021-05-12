@@ -27,6 +27,7 @@ class MotorSqliteTable(object):
         self.update_sql = f'UPDATE {table} SET '
         self.insert_sql = f'INSERT INTO {table} '
         self.delete_sql = f'DELETE FROM {table} WHERE '
+        self.drop_sql = f'DROP TABLE {table}'
 
     async def _execute(
         self, query: str, values: Iterable[Any] = None
@@ -108,3 +109,6 @@ class MotorSqliteTable(object):
         self, sql: str, params: Iterable[Any] = None
     ) -> Cursor:
         return await self._execute(sql, params)
+
+    async def drop_collection(self) -> Cursor:
+        return await self._execute(self.drop_sql)
