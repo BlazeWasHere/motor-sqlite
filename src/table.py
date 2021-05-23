@@ -112,3 +112,16 @@ class MotorSqliteTable(object):
 
     async def drop_collection(self) -> Cursor:
         return await self._execute(self.drop_sql)
+
+    async def delete(self, data: Dict[str, Any], one: bool = False) -> int:
+        query, values = build_query(self.delete_sql, data)
+
+        if one:
+            query += ' LIMIT 1'
+
+        cursor = await self._execute(query, values)
+
+        return cursor.rowcount
+
+    async def delete_one(self, data: Dict[str, Any]) -> bool:
+        return await self.delete(data, True) == 1
