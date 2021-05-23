@@ -52,7 +52,17 @@ async def test():
 
     # 1
     assert(await posts.insert({'key': 'inserted1'}) == 1)
-    
+
+    # 1
+    assert(await posts.delete_one({'key': 'inserted1'}))
+
+    # TODO(blaze): insert_many()
+    for _ in range(3):
+        assert(await posts.insert({'key': 'inserted2'}) == 1)
+
+    # 3
+    assert(await posts.delete({'key': 'inserted2'}) == 3)
+
     print('tests passed.')
 
 database = MotorSqlite()
