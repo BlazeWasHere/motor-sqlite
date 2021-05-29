@@ -45,9 +45,11 @@ class MotorSqliteTable(object):
     async def find(
         self, _dict: Dict[str, Any]
     ) -> Generator[Dict[str, Union[str, int]], None, None]:
-
-        query, values = build_query(self.select_sql, _dict)
-        cursor = await self._execute(query, values)
+        if not _dict:
+            cursor = await self._execute(self.select_sql.split(' WHERE')[0])
+        else:
+            query, values = build_query(self.select_sql, _dict)
+            cursor = await self._execute(query, values)
 
         # async generator to keep it similar to motor api
         for res in await cursor.fetchall():
