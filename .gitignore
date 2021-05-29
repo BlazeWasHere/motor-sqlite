@@ -2,6 +2,6 @@
 .mypy_cache
 .vscode
 data
-.vim
+.nvimlist
+**/.nvim
 .nvimlog
-
